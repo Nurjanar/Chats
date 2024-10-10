@@ -1,7 +1,6 @@
 object ChatService {
     private var chats = mutableListOf<Chats>()
     private var chatCounter = 0
-    private var messages = mutableListOf<Message>()
     private var messageCounter = 0
 
     private fun createChat(chat: Chats): Chats {
@@ -12,38 +11,54 @@ object ChatService {
     }
 
     fun deleteMessage(messageId: Int): Boolean {
-        messages.remove(messages.find { it.messageId == messageId }
-            ?: throw MessageNotFoundException())
+        var result = false
         chats.forEach { chat ->
-            val result = chat.directMessages.find { it.messageId == messageId }
-            result?.text = ""
-            result?.messageId = 0
+            result = chat.directMessages.remove(
+                chat.directMessages.find {
+                    it.messageId == messageId
+                })
             chat.unReadMessages -= 1
+        }
+        if (!result) {
+            throw MessageNotFoundException()
         }
         return true
     }
 
     fun deleteChat(chatId: Int, fromId: Int): Boolean {
-        chats.remove(chats.find { it.chatId == chatId && it.fromId == fromId }
+        chats.remove(chats.find {
+            it.chatId == chatId &&
+                    it.fromId == fromId
+        }
             ?: throw ChatNotFoundException())
-        messages.removeAll(messages.filter { it.fromId == fromId })
         return true
     }
 
-    fun getChatById(fromId: Int): Chats {
+    fun getChatById(fromId: Int): List<Message> {
+        val list = mutableListOf<Message>()
         val chat = chats.find { it.fromId == fromId }
             ?: throw ChatNotFoundException()
+        chat.directMessages.forEach { sms ->
+            sms.unRead = false
+            list.add(sms)
+        }
         chat.unReadMessages = 0
-        return chat
+        return list
     }
 
     fun getUnreadChatsCount(): Int {
-        return chats.sumOf { it.unReadMessages }
+        var count = 0
+        chats.forEach { chat ->
+            if (chat.unReadMessages > 0) {
+                count += 1
+            }
+        }
+        return count
     }
 
     fun getLastMessage(): List<String> {
+        val lastMessage = mutableListOf("")
         var sms: String
-        val list = mutableListOf("")
         chats.forEachIndexed { _: Int, chat: Chats ->
             val result = chat.directMessages.findLast { true }?.text
             sms = if (result.isNullOrEmpty()) {
@@ -51,9 +66,9 @@ object ChatService {
             } else {
                 result
             }
-            list.add(sms + "\n")
+            lastMessage.add(sms + "\n")
         }
-        return list
+        return lastMessage
     }
 
     fun getChats(): List<Chats> {
@@ -69,36 +84,37 @@ object ChatService {
             fromId = fromId,
             messageId = ++messageCounter
         )
-        messages += message
         val result = chats.find { it.fromId == fromId }
         if (result == null) {
             createChat(
                 Chats(
                     fromId = fromId,
-                    directMessages = messages.filter { it.fromId == fromId },
+                    directMessages = mutableListOf(message),
                     unReadMessages = 1
                 )
             )
         } else {
-            result.directMessages = messages.filter { it.fromId == fromId }
+            result.directMessages += message
             result.unReadMessages += 1
         }
 
-        return messages.last()
+        return message
     }
 
-    fun editMessage(messageId: Int, newText: String): Boolean {
-        val message = messages.find {
-            it.messageId == messageId
-        } ?: throw MessageNotFoundException()
-        message.text = newText
+    fun editMessage(fromId: Int, messageId: Int, newText: String): Boolean {
+        chats.forEach { chat ->
+            val message = chat.directMessages.find {
+                it.fromId == fromId &&
+                        it.messageId == messageId
+            }
+            message?.text = newText
+        }
         return true
     }
 
     fun clear() {
         chats.clear()
         chatCounter = 0
-        messages.clear()
         messageCounter = 0
     }
 }

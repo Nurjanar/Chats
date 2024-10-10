@@ -2,6 +2,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import kotlin.test.assertFalse
 
 class ChatServiceTest {
     private val service = ChatService
@@ -23,17 +24,20 @@ class ChatServiceTest {
     fun editMessage() {
         val text = "СУР 265"
         service.createMessage("Галя, отмена!", 1)
-        val result = service.editMessage(1, text)
+        val result = service.editMessage(1, 1, text)
         assertTrue(result)
     }
 
     @Test
     fun getChatById() {
         val text = "Ульяна +799"
+        var result = true
         service.createMessage(text, 1)
-        val chat = service.getChatById(1)
-        val result = chat.unReadMessages
-        assertEquals(0, result)
+        val list = service.getChatById(1)
+        list.forEach { sms ->
+            result = sms.unRead
+        }
+        assertFalse(result)
     }
 
     @Test
@@ -49,9 +53,9 @@ class ChatServiceTest {
         service.createMessage("Галя, скорее!", 1)
         service.createMessage("Просят книгу жалоб", 2)
 
-        val sms = service.getLastMessage()
-        val result = sms.size - 1
-        assertEquals(2, result)
+        val result = service.getLastMessage().size
+
+        assertEquals(3, result)
     }
 
     @Test

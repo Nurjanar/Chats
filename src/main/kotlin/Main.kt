@@ -7,7 +7,7 @@ fun main() {
     ChatService.createMessage("Вам звонили", 3)
 
     println(ChatService.getChats())
-    ChatService.editMessage(1, "Как дела!?")
+    ChatService.editMessage(1, 1, "Как дела!?")
     println(ChatService.getChats())
     println(ChatService.getChatById(1))
     println(ChatService.getChats())
@@ -16,7 +16,7 @@ fun main() {
     println(ChatService.getUnreadChatsCount())
     println(ChatService.getLastMessage())
     println(ChatService.getChats())
-    println(ChatService.deleteMessage(5))
+    ChatService.deleteMessage(5)
     println(ChatService.getChats())
     println(ChatService.getLastMessage())
 }
