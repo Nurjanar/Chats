@@ -34,27 +34,21 @@ object ChatService {
         return true
     }
 
-    fun getChatById(fromId: Int): List<Message> {
-        val list = mutableListOf<Message>()
+    fun getChatById(fromId: Int, count: Int): List<Message> {
+        var counter = 0
         val chat = chats.find { it.fromId == fromId }
             ?: throw ChatNotFoundException()
-        chat.directMessages.forEach { sms ->
+        val lastMessages = chat.directMessages.takeLast(count)
+        lastMessages.forEach { sms ->
             sms.unRead = false
-            list.add(sms)
+            counter += 1
         }
-        chat.unReadMessages = 0
-        return list
+        chat.unReadMessages -= counter
+        return lastMessages
     }
 
-    fun getUnreadChatsCount(): Int {
-        var count = 0
-        chats.forEach { chat ->
-            if (chat.unReadMessages > 0) {
-                count += 1
-            }
-        }
-        return count
-    }
+    fun getUnreadChatsCount(): Int = chats.count { it.unReadMessages > 0 }
+
 
     fun getLastMessage(): List<String> {
         val lastMessage = mutableListOf("")

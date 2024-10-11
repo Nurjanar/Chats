@@ -9,7 +9,7 @@ fun main() {
     println(ChatService.getChats())
     ChatService.editMessage(1, 1, "Как дела!?")
     println(ChatService.getChats())
-    println(ChatService.getChatById(1))
+    println(ChatService.getChatById(1, 2))
     println(ChatService.getChats())
     println(ChatService.deleteChat(2, 2))
     println(ChatService.getChats())

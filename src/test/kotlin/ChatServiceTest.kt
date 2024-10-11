@@ -33,7 +33,7 @@ class ChatServiceTest {
         val text = "Ульяна +799"
         var result = true
         service.createMessage(text, 1)
-        val list = service.getChatById(1)
+        val list = service.getChatById(1, 1)
         list.forEach { sms ->
             result = sms.unRead
         }
