@@ -55,7 +55,7 @@ class ChatServiceTest {
 
         val result = service.getLastMessage().size
 
-        assertEquals(3, result)
+        assertEquals(2, result)
     }
 
     @Test
@@ -68,7 +68,7 @@ class ChatServiceTest {
 
     @Test(expected = MessageNotFoundException::class)
     fun deleteMessage() {
-        service.deleteMessage(1)
+        service.deleteMessage(1, 1)
     }
 
     @Test(expected = ChatNotFoundException::class)
