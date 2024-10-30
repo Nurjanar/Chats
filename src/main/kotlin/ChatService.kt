@@ -10,33 +10,28 @@ object ChatService {
         return chats.last()
     }
 
-    fun deleteMessage(messageId: Int): Boolean {
-        var result = false
-        chats.forEach { chat ->
-            result = chat.directMessages.remove(
-                chat.directMessages.find {
-                    it.messageId == messageId
-                })
+    fun deleteMessage(fromId: Int, messageId: Int): Boolean {
+        val chat = chats.asSequence().find {
+            it.fromId == fromId
+        }
+        val result = chat?.directMessages?.removeIf { it.messageId == messageId } ?: throw MessageNotFoundException()
+        if (result) {
             chat.unReadMessages -= 1
         }
-        if (!result) {
-            throw MessageNotFoundException()
-        }
-        return true
+        return result
     }
 
     fun deleteChat(chatId: Int, fromId: Int): Boolean {
-        chats.remove(chats.find {
+        return chats.remove(chats.find {
             it.chatId == chatId &&
                     it.fromId == fromId
         }
             ?: throw ChatNotFoundException())
-        return true
     }
 
     fun getChatById(fromId: Int, count: Int): List<Message> {
         var counter = 0
-        val chat = chats.find { it.fromId == fromId }
+        val chat = chats.asSequence().find { it.fromId == fromId }
             ?: throw ChatNotFoundException()
         val lastMessages = chat.directMessages.takeLast(count)
         lastMessages.forEach { sms ->
@@ -50,27 +45,18 @@ object ChatService {
     fun getUnreadChatsCount(): Int = chats.count { it.unReadMessages > 0 }
 
 
-    fun getLastMessage(): List<String> {
-        val lastMessage = mutableListOf("")
-        var sms: String
-        chats.forEachIndexed { _: Int, chat: Chats ->
-            val result = chat.directMessages.findLast { true }?.text
-            sms = if (result.isNullOrEmpty()) {
-                "Нет сообщений"
-            } else {
-                result
-            }
-            lastMessage.add(sms + "\n")
+    fun getLastMessage(): List<String> =
+        chats.asSequence().map { chat ->
+            chat.directMessages.lastOrNull()?.text ?: "Нет сообщений"
         }
-        return lastMessage
-    }
+            .map {
+                "$it\n"
+            }.toList()
 
-    fun getChats(): List<Chats> {
-        val result = chats.sortedWith(compareByDescending<Chats> {
+    fun getChats(): List<Chats> =
+        chats.asSequence().sortedByDescending {
             it.unReadMessages
-        })
-        return result
-    }
+        }.toList()
 
     fun createMessage(text: String, fromId: Int): Message {
         val message = Message(
@@ -78,7 +64,8 @@ object ChatService {
             fromId = fromId,
             messageId = ++messageCounter
         )
-        val result = chats.find { it.fromId == fromId }
+        val result = chats.asSequence().find { it.fromId == fromId }
+
         if (result == null) {
             createChat(
                 Chats(
@@ -89,19 +76,19 @@ object ChatService {
             )
         } else {
             result.directMessages += message
-            result.unReadMessages += 1
+            result.unReadMessages++
         }
 
         return message
     }
 
     fun editMessage(fromId: Int, messageId: Int, newText: String): Boolean {
-        chats.forEach { chat ->
-            val message = chat.directMessages.find {
+
+        chats.asSequence().forEach { chat ->
+            chat.directMessages.find {
                 it.fromId == fromId &&
                         it.messageId == messageId
-            }
-            message?.text = newText
+            }?.let { it.text = newText }
         }
         return true
     }

@@ -16,7 +16,7 @@ fun main() {
     println(ChatService.getUnreadChatsCount())
     println(ChatService.getLastMessage())
     println(ChatService.getChats())
-    ChatService.deleteMessage(5)
+    ChatService.deleteMessage(3, 5)
     println(ChatService.getChats())
     println(ChatService.getLastMessage())
 }
